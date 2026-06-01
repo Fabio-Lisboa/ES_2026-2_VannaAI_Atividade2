@@ -1,0 +1,10 @@
+# Análise de Gestão e Processos (Eixo A - MPS.BR: GPR)
+
+## 1. Arqueologia de Issues
+A investigação foi conduzida a partir da Issue #659 (PG Vector not working) e do respectivo Pull Request #660. Durante a análise, ficou evidente que a funcionalidade foi integrada inicialmente sem uma cobertura de testes apropriada. Ao longo das discussões, o escopo do problema se expandiu para englobar inconsistências assíncronas e falhas de arquitetura nos embeddings, sem que houvesse uma documentação formal para essa mudança de direcionamento técnico. Essa ausência de rastreabilidade formal eleva o risco técnico para um nível médio-alto.
+
+## 2. Gestão de Riscos Ocultos
+O projeto apresenta estratégias válidas para mitigação de falhas operacionais e vendor lock-in, isolando os provedores de IA no diretório `integrations/` e utilizando variáveis de ambiente para seleção dinâmica de modelos. Além disso, mecanismos de recuperação (`ErrorRecoveryStrategy`) previnem falhas em cascata. Contudo, a base de código carece de marcadores explícitos de dívida técnica, como comentários TODO ou FIXME. Essa ausência dificulta o mapeamento proativo de pendências internas, configurando um risco médio.
+
+## 3. Ritmo de Entrega e Code Review
+A observação do histórico de commits revela o anti-padrão de "herói único". O principal desenvolvedor concentra um volume de contribuições aproximadamente seis vezes maior que o segundo colaborador. O fluxo de desenvolvimento é reativo e marcado por períodos de crunch time, com picos de atividade concentrados (agosto/2023, março/2024, novembro/2025). Embora exista um processo de Code Review via PRs, as aprovações geralmente carecem de discussões técnicas aprofundadas sobre arquitetura, focando apenas na validação funcional. O risco associado à manutenção a longo prazo é classificado como alto.

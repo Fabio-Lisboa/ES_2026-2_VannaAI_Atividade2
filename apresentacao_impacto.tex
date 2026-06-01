@@ -1,0 +1,129 @@
+\documentclass[10pt, aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{xcolor}
+
+\title[Auditoria Vanna AI]{Auditoria Forense e Plano de Resgate Técnico}
+\subtitle{Ecossistema Vanna AI}
+
+\author[Equipe de Auditoria]{
+    Bruno Henrique Carneiro da Silva \and Diego Carvalho Cavalcante \\
+    Fábio Henrique Lisboa de Souza \and Flávio Henrique de Jesus Cruz \\
+    Guilherme Sollano Andrade dos Santos \and José Weverton de Oliveira Vilar \\
+    Leonardo Caricchio do Nascimento \and Matheus Henrique Silva de Melo
+}
+
+\institute[COMP0503]{Engenharia de Software (COMP0503)}
+\date{02 de Junho de 2026}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Avaliação de Gestão (MPS.BR - GPR)}
+    \begin{itemize}
+        \item \textbf{Risco: Lacuna na Engenharia de Requisitos (Mudança de Escopo oculta)}
+        \begin{itemize}
+            \item \textcolor{blue}{\textbf{Evidência:}} Issue \#659 e PR \#660. Uma discussão iniciada como correção de erro (\textit{documentation\_collection}) escalou para refatoração de \textit{embeddings} sem nenhum RFC ou documento de arquitetura formalizando a alteração.
+        \end{itemize}
+        \vspace{0.3cm}
+        
+        \item \textbf{Risco: Vulnerabilidade de Manutenção ("Herói Único")}
+        \begin{itemize}
+            \item \textcolor{blue}{\textbf{Evidência:}} Gráfico de contribuições do repositório revela picos severos de \textit{crunch time} e um mantenedor central responsável por 399 \textit{commits}, contra apenas 60 do segundo contribuidor mais ativo.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Anatomia do Código e Dívida Técnica (SOLID e DRY)}
+    \begin{itemize}
+        \item \textbf{Risco: Violação Crítica do Princípio da Responsabilidade Única (SRP)}
+        \begin{itemize}
+            \item \textcolor{blue}{\textbf{Evidência:}} Arquivo \texttt{src/vanna/legacy/base/base.py}. Trata-se de uma \textit{God Class} confirmada com exatas 2.125 linhas e 65 métodos, aglutinando geração de SQL, manipulação de banco de dados e execução de IA no mesmo escopo.
+        \end{itemize}
+        \vspace{0.3cm}
+
+        \item \textbf{Risco: Retrabalho e Quebra Parcial do DRY}
+        \begin{itemize}
+            \item \textcolor{blue}{\textbf{Evidência:}} O método \texttt{\_extract\_tool\_calls\_from\_message} possui a mesma lógica de tratamento de JSON repetida em diferentes implementações de \texttt{LlmService} (OpenAI, Anthropic), em vez de estar isolada em uma classe utilitária.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Riscos em Padrões de Projeto (GoF)}
+    \begin{itemize}
+        \item \textbf{Risco: Falha de Gerenciamento Criacional (Conexões Redundantes)}
+        \begin{itemize}
+            \item \textcolor{blue}{\textbf{Evidência:}} O arquivo \texttt{chromadb/agent\_memory.py} invoca \texttt{chromadb.PersistentClient()} a cada nova instância, sem a proteção de um padrão \textit{Singleton} para reaproveitar a conexão vetorial.
+        \end{itemize}
+        \vspace{0.3cm}
+
+        \item \textbf{Risco: Delegação Insegura de Execução (Ausência de Padrão Comportamental)}
+        \begin{itemize}
+            \item \textcolor{blue}{\textbf{Evidência:}} O \textit{Agentic Loop} (\texttt{core/agent/agent.py}) confia cegamente no modelo. Ao identificar o comando, executa \texttt{await self.tool\_registry.execute(tool\_call, context)} sem nenhuma corrente de validação prévia.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Plano de Resgate: Falha Arquitetural}
+    \textbf{Diagnóstico da Vulnerabilidade no Vanna 2.0}
+    \vspace{0.3cm}
+    \begin{itemize}
+        \item \textbf{Assimetria de Design:} O projeto utiliza de forma inteligente a abstração de \textit{Middlewares} para a comunicação externa com as APIs de LLM, mas ignora completamente este padrão na sua camada mais sensível: a execução de ferramentas.
+        \item \textbf{Execução Direta:} O método \texttt{await self.tool\_registry.execute()} roda a ação baseada unicamente na saída textual gerada pela Inteligência Artificial.
+        \item \textbf{Risco Crítico:} Uma eventual alucinação do modelo contendo instruções destrutivas (ex: \texttt{DROP} ou \texttt{DELETE}) atinge o banco de dados de produção instantaneamente, sem nenhum mecanismo de contenção.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Plano de Resgate: \textit{Chain of Responsibility} (GoF)}
+    \textbf{Proposta: Escudo de \textit{Middlewares} de Execução}
+    \vspace{0.3cm}
+    \begin{itemize}
+        \item \textbf{Isolamento de Responsabilidades (SRP):} Criação da entidade \texttt{ToolExecutionRequest} para circular por uma corrente de interceptadores independentes.
+        \item \textbf{Elo 1 - \texttt{RateLimitMiddleware}:} Validação das cotas de uso do usuário, prevenindo gargalos operacionais ou custos excessivos de API.
+        \item \textbf{Elo 2 - \texttt{SQLSanitizationMiddleware}:} Inspeção rigorosa dos argumentos da chamada (ex: \texttt{args.sql}) para barrar operações DDL/DML não autorizadas.
+        \item \textbf{Elo 3 - \texttt{FinalExecutionMiddleware}:} Camada de execução física (\texttt{sql\_runner}), atingida exclusivamente se a requisição sobreviver intacta a todos os elos anteriores.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Roadmap de Maturidade: Rumo ao Nível G (MPS.BR)}
+    \textbf{Objetivo:} Institucionalizar processos em 90 dias para superar o atual estágio informal (Pré-Nível G).
+    \vspace{0.3cm}
+
+    \textbf{Ação 1: Institucionalizar a Gerência de Projetos (GPR)}
+    \begin{itemize}
+        \item \textbf{Foco:} Dissolver o anti-padrão de "Herói Único" e garantir cadência previsível.
+        \item \textbf{Implementação Tática:} 
+        \begin{itemize}
+            \item Implantação de \textit{GitHub Projects} (\textit{Backlog, In Progress, Review, Done}).
+            \item Política de rodízio: designar pelo menos dois \textit{co-maintainers} com permissões de \textit{merge}.
+            \item Criação de um \textbf{Registro de Riscos} formal no \textit{wiki} (mapeando instabilidade de APIs e \textit{vendor lock-in}).
+        \end{itemize}
+        \item \textbf{Prazo:} Semanas 1 a 3 \textcolor{red}{\textbf{(Prioridade Crítica)}}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Roadmap de Maturidade: Requisitos e Qualidade}
+    \textbf{Ação 2: Formalizar a Gerência de Requisitos (GRE)}
+    \begin{itemize}
+        \item \textbf{Foco:} Erradicar mudanças de escopo ocultas e garantir rastreabilidade bidirecional.
+        \item \textbf{Implementação Tática:} \textit{Issue Templates} obrigatórios (com Critérios de Aceitação) e uso de \textit{ADRs} (\textit{Architecture Decision Records}) para documentar alterações estruturais.
+        \item \textbf{Prazo:} Semanas 2 a 5 \textcolor{orange}{\textbf{(Prioridade Alta)}}.
+    \end{itemize}
+    \vspace{0.3cm}
+
+    \textbf{Ação 3: Elevar a Qualidade do Produto (QPR)}
+    \begin{itemize}
+        \item \textbf{Foco:} Proteger a base de código contra regressões e vulnerabilidades de IA.
+        \item \textbf{Implementação Tática:} Estabelecer \textit{Definition of Done} (DoD) inflexível. \textit{Pull Requests} bloqueados nativamente até aprovação em CI/CD (cobertura \textit{pytest} $\ge$ 70\%) e varredura SAST (Bandit) contra injeções SQL.
+        \item \textbf{Prazo:} Semanas 3 a 8 \textcolor{orange}{\textbf{(Prioridade Alta)}}.
+    \end{itemize}
+\end{frame}
+
+\end{document}
