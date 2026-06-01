@@ -5,6 +5,7 @@ Este repositório contém os artefatos, diagnósticos e diagramas desenvolvidos 
 ## Defesa da Auditoria Técnica
 
 **(link)**
+
 *(Apresentação com a fundamentação teórica dos achados e a inspeção no código-fonte)*
 
 ## Composição da Equipe
