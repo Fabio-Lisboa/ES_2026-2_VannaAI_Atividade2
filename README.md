@@ -9,14 +9,14 @@ Este repositório contém os artefatos, diagnósticos e diagramas desenvolvidos 
 
 ## Composição da Equipe
 
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
-* [Nome do Integrante] (Matrícula)
+* Bruno Henrique Carneiro da Silva
+* Diego Carvalho Cavalcante
+* Fábio Henrique Lisboa de Souza
+* Flávio Henrique de Jesus Cruz
+* Guilherme Sollano Andrade dos Santos
+* José Weverton de Oliveira Vilar
+* Leonardo Caricchio do Nascimento
+* Matheus Henrique Silva de Melo
 
 ---
 
