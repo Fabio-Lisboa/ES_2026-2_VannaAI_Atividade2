@@ -53,7 +53,7 @@ sequenceDiagram
     participant RateLimit as RateLimitMiddleware
     participant SQLCheck as SQLSanitizationMiddleware
     participant Exec as FinalExecutionMiddleware
-    database DB as Banco de Dados
+    participant DB as Banco de Dados
 
     LLM->>Agent: Solicita tool_call ("run_sql", "DROP TABLE users;")
     Agent->>Pipeline: handle(ToolExecutionRequest)
