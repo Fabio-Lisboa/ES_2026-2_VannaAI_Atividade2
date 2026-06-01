@@ -45,7 +45,6 @@ classDiagram
 ## 2. Diagrama de Sequência (Fluxo de Proteção)
 O fluxo abaixo demonstra a aplicação bloqueando um comando SQL destrutivo (`DROP TABLE`).
 
-```mermaid
 sequenceDiagram
     actor LLM
     participant Agent
@@ -55,7 +54,7 @@ sequenceDiagram
     participant Exec as FinalExecutionMiddleware
     participant DB as Banco de Dados
 
-    LLM->>Agent: Solicita tool_call ("run_sql", "DROP TABLE users;")
+    LLM->>Agent: Solicita execucao de comando SQL
     Agent->>Pipeline: handle(ToolExecutionRequest)
     
     Pipeline->>RateLimit: handle(request)
@@ -64,9 +63,9 @@ sequenceDiagram
     else Cota disponível
         RateLimit->>SQLCheck: handle(request)
         
-        alt Contém "DROP" ou "DELETE"
-            SQLCheck-->>Agent: Bloqueio de Segurança (Injeção SQL)
-            Agent-->>LLM: Falha na Execução (Não autorizado)
+        alt Comando destrutivo detectado
+            SQLCheck-->>Agent: Bloqueio de Segurança
+            Agent-->>LLM: Falha na Execução
         else Comando SELECT seguro
             SQLCheck->>Exec: handle(request)
             Exec->>DB: await sql_runner.run_sql()
@@ -75,4 +74,3 @@ sequenceDiagram
             Agent-->>LLM: Contexto Injetado
         end
     end
-```
