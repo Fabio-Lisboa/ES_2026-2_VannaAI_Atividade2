@@ -45,14 +45,14 @@ classDiagram
 ## 2. Diagrama de Sequência (Fluxo de Proteção)
 O fluxo abaixo demonstra a aplicação bloqueando um comando SQL destrutivo (`DROP TABLE`).
 
-sequenceDiagram
-    actor LLM
-    participant Agent
-    participant Pipeline as ExecutionPipeline
-    participant RateLimit as RateLimitMiddleware
-    participant SQLCheck as SQLSanitizationMiddleware
-    participant Exec as FinalExecutionMiddleware
-    participant DB as Banco de Dados
+    sequenceDiagram
+        actor LLM
+        participant Agent
+        participant Pipeline as ExecutionPipeline
+        participant RateLimit as RateLimitMiddleware
+        participant SQLCheck as SQLSanitizationMiddleware
+        participant Exec as FinalExecutionMiddleware
+        participant DB as Banco de Dados
 
     LLM->>Agent: Solicita execucao de comando SQL
     Agent->>Pipeline: handle(ToolExecutionRequest)
