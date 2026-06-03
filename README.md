@@ -4,7 +4,7 @@ Este repositório contém os artefatos, diagnósticos e diagramas desenvolvidos 
 
 ## Defesa da Auditoria Técnica
 
-**(link)**
+**https://youtu.be/vpRES1XwJHw?si=BVY7-dAjwr86pzbK**
 
 *(Apresentação com a fundamentação teórica dos achados e a inspeção no código-fonte)*
 
